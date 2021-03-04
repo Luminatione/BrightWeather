@@ -144,6 +144,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Utility.h" />
     <ClInclude Include="WeatherInfoGetter.h" />
     <ClInclude Include="WeekDaysNames.h" />
     <ClInclude Include="WeekDaysUtility.h" />

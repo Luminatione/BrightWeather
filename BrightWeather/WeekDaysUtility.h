@@ -1,6 +1,5 @@
 #pragma once
-#define __STDC_LIB_EXT1__
-#define __STDC_WANT_LIB_EXT1__
+
 #include <ctime>
 #include <string>
 #include <exception>
@@ -10,6 +9,7 @@
 class WeekDaysUtility
 {
 public:
+	WeekDaysUtility() = default;
 	static std::vector<std::string> GetNext7DaysWeekNames()
 	{
 		std::time_t now = time(NULL);
