@@ -105,6 +105,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    windowContent = WindowContentManager(hWnd);
    windowContent.CreateDaySelectionControls();
    windowContent.CreateInformationDisplayControls();
+   windowContent.LoadWeatherData();
    if (!hWnd)
    {
       return FALSE;

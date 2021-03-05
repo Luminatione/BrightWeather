@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BrightWeather", "BrightWeather\BrightWeather.vcxproj", "{9E2BD564-EE43-4D73-98EB-80424326CABD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BrightWeatherUnitTests", "BrightWeatherUnitTests\BrightWeatherUnitTests.vcxproj", "{593477C2-0D7D-4715-B60F-24FEF740B5EC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9E2BD564-EE43-4D73-98EB-80424326CABD} = {9E2BD564-EE43-4D73-98EB-80424326CABD}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
