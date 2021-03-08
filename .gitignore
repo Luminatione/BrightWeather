@@ -340,4 +340,4 @@ ASALocalRun/
 healthchecksdb
 
 #header file with api keys
-ApiKeys.h
+/BrightWeather/ApiKeys.h
