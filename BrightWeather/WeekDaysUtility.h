@@ -18,11 +18,8 @@ public:
 		{
 			throw std::exception("localtime_s call failure");
 		}
-		if(nowOut->tm_wday == 0)
-		{
-			nowOut->tm_wday = 7;
-		}
-		return WeekDaysNames::GetDaysFromTo(nowOut->tm_wday, nowOut->tm_wday + 6);
+		return WeekDaysNames::GetDaysFromTo(0, 6);
+		//return WeekDaysNames::GetDaysFromTo(nowOut->tm_wday, nowOut->tm_wday + 6);
 	}
 	
 };

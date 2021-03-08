@@ -4,16 +4,16 @@
 #include <curl/curl.h>
 #include <string>
 #include <cmath>
-#include <thread>
 
+#include "ApiKeys.h"
 #include "BrightWeatherExceptions.h"
 #include "json.hpp"
 
 class WeatherInfoGetter//TODO: implement
 {
-	std::string apiKeyOpenWeatherMap = "d3aa3b8991cba14d22f3cfd35ce2d0f8";
-	std::string apiKeyIPinfo = "0ef995f3b1731e";
-	std::string IPinfoURL = "https://ipinfo.io?token=" + apiKeyIPinfo;
+	//std::string apiKeyOpenWeatherMap = "d3aa3b8991cba14d22f3cfd35ce2d0f8";
+	//std::string apiKeyIPinfo = "0ef995f3b1731e";
+	std::string IPinfoURL = "https://ipinfo.io?token=" + apiKeyIPInfo;
 	std::string OpenWeatherMapURL = "https://api.openweathermap.org/data/2.5/onecall?";
 
 
@@ -41,17 +41,16 @@ private:
 	{
 		std::string output;
 		CURL* connection = curl_easy_init();
-		//CURLM* multiHandle = curl_multi_init();
 		if (connection)
 		{
 			curl_easy_setopt(connection, CURLOPT_URL, URL.c_str());
 			curl_easy_setopt(connection, CURLOPT_HEADER, 0);
 			curl_easy_setopt(connection, CURLOPT_WRITEFUNCTION, Writer);
 			curl_easy_setopt(connection, CURLOPT_WRITEDATA, &output);
-			//curl_multi_add_handle(multiHandle, connection);
+			curl_easy_setopt(connection, CURLOPT_TIMEOUT, 5);
 			CURLcode result = curl_easy_perform(connection);
 			
-			if(result != CURLM_OK && onError != nullptr)
+			if(result != CURLE_OK && onError != nullptr)
 			{
 				onError();
 			}
@@ -61,7 +60,6 @@ private:
 			onError();
 		}
 		curl_easy_cleanup(connection);
-		//curl_multi_cleanup(multiHandle);
 		return output;
 	}
 	static int Writer(void* data, size_t size, size_t nmemb, void* buffer)

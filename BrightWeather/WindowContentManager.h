@@ -13,7 +13,8 @@
 
 #define BUTTON_PARAM_START 1000
 #define REFRESH_BUTTON 999
-#define WEATHERDATA_LOADED 998
+#define WEATHER_DATA_LOADED 9980
+#define WEATHER_DATA_LOADING_FAILED 9981
 
 class WindowContentManager
 {
@@ -109,10 +110,18 @@ public:
 		try
 		{
 			std::thread thread = std::thread([&]() {
-				WeatherInfoGetter weatherInfoGetter;
-				std::vector<WeatherInfoGetter::WeatherData> temp = weatherInfoGetter.GetWeatherData();
-				SendMessageA(mainWindow, WM_COMMAND, WEATHERDATA_LOADED, (LPARAM)&temp);
-			});
+				try
+				{
+					WeatherInfoGetter weatherInfoGetter;
+					std::vector<WeatherInfoGetter::WeatherData> temp = weatherInfoGetter.GetWeatherData();
+					SendMessageA(mainWindow, WM_COMMAND, WEATHER_DATA_LOADED, (LPARAM)&temp);
+				}
+				catch (ConnectionFailureException e)
+				{
+					std::string what = e.what();
+					SendMessageA(mainWindow, WM_COMMAND, WEATHER_DATA_LOADING_FAILED, (LPARAM)&what);
+				}
+				});
 			thread.detach();
 		}
 		catch (ConnectionFailureException e)
@@ -140,25 +149,52 @@ public:
 		{
 			throw InvalidArgumentException();
 		}
-		if (wParam == REFRESH_BUTTON)
-		{
-			LoadWeatherData();
-		}
-		else if (IsValidButtonID(wParam))
+
+		if (IsValidButtonID(wParam))
 		{
 			std::string	temp = Utility::AddColonAndSpaceAtEnd(weekDays[wParam - BUTTON_PARAM_START]);
 			currentWeekDayCaption.ChangeText(temp);
 			currentSelectedDay = wParam - BUTTON_PARAM_START;
 			DisplayCurrentStoredData();
 		}
-		else if (wParam == WEATHERDATA_LOADED)
-		{
-			weatherData = *((std::vector<WeatherInfoGetter::WeatherData>*)lParam);
-			DisplayCurrentStoredData();
-		}
 		else
 		{
-			return DefWindowProc(hWnd, message, wParam, lParam);
+			switch (wParam)
+			{
+			case REFRESH_BUTTON:
+			{
+				LoadWeatherData();
+			}
+			break;
+			case WEATHER_DATA_LOADED:
+			{
+				weatherData = *(std::vector<WeatherInfoGetter::WeatherData>*)lParam;
+				DisplayCurrentStoredData();
+			}
+			break;
+			case WEATHER_DATA_LOADING_FAILED:
+			{
+				int option = MessageBoxA(mainWindow, (*(std::string*)lParam).c_str(), "Error", MB_RETRYCANCEL | MB_ICONERROR | MB_DEFBUTTON1 | MB_APPLMODAL);
+				switch (option)
+				{
+				case IDCANCEL:
+					SendMessageA(mainWindow, WM_COMMAND, IDM_EXIT, NULL);
+					break;
+				case IDRETRY:
+					SendMessageA(mainWindow, WM_COMMAND, REFRESH_BUTTON, NULL);
+					break;
+				default:
+					throw InvalidArgumentException();
+				}
+			}
+			break;
+			default:
+			{
+				return DefWindowProc(hWnd, message, wParam, lParam);
+			}
+			}
 		}
+
+		return 0;
 	}
 };

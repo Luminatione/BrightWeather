@@ -11,14 +11,14 @@ class WeekDaysNames//TODO add tests
 public:
 	static std::vector<std::string> GetDaysFromTo(int start, int end)
 	{
-		if (start <= 0 || end <= 0 || start > end)
+		if (start < 0 || end < 0 || start > end)
 		{
 			throw InvalidArgumentException();
 		}
 		auto result = std::vector<std::string>( end - start + 1);
 		for (int i = 0, j = start; j <= end; i++, j++)
 		{
-			result[i] = weekDays[(j - 1) % 7];
+			result[i] = weekDays[j % 7];
 		}
 		return result;
 	}
