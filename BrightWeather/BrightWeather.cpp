@@ -28,8 +28,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Place code here.
-
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_BRIGHTWEATHER, szWindowClass, MAX_LOADSTRING);
@@ -40,7 +38,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         return FALSE;
     }
-
+    windowContent.LoadWeatherData();
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_BRIGHTWEATHER));
 
     MSG msg;
@@ -105,7 +103,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    windowContent = WindowContentManager(hWnd);
    windowContent.CreateDaySelectionControls();
    windowContent.CreateInformationDisplayControls();
-   windowContent.LoadWeatherData();
    if (!hWnd)
    {
       return FALSE;
@@ -113,7 +110,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
-
    return TRUE;
 }
 
@@ -146,14 +142,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             default:
                 return windowContent.ProcessEvents(hWnd, message, wParam, lParam);
             }
-        }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
         }
         break;
     case WM_DESTROY:

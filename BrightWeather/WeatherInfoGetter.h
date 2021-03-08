@@ -4,7 +4,9 @@
 #include <curl/curl.h>
 #include <string>
 #include <cmath>
+#include <thread>
 
+#include "BrightWeatherExceptions.h"
 #include "json.hpp"
 
 class WeatherInfoGetter//TODO: implement
@@ -37,32 +39,43 @@ private:
 	}
 	std::string GetWebsiteContent(const std::string& URL, void onError() = nullptr)
 	{
-		std::string result;
+		std::string output;
 		CURL* connection = curl_easy_init();
+		//CURLM* multiHandle = curl_multi_init();
 		if (connection)
 		{
 			curl_easy_setopt(connection, CURLOPT_URL, URL.c_str());
 			curl_easy_setopt(connection, CURLOPT_HEADER, 0);
 			curl_easy_setopt(connection, CURLOPT_WRITEFUNCTION, Writer);
-			curl_easy_setopt(connection, CURLOPT_WRITEDATA, &result);
-			curl_easy_perform(connection);
-		}
-		else
-		{
-			if (onError != nullptr)
+			curl_easy_setopt(connection, CURLOPT_WRITEDATA, &output);
+			//curl_multi_add_handle(multiHandle, connection);
+			CURLcode result = curl_easy_perform(connection);
+			
+			if(result != CURLM_OK && onError != nullptr)
+			{
 				onError();
+			}
+		}
+		else if(onError != nullptr)
+		{		
+			onError();
 		}
 		curl_easy_cleanup(connection);
-		return result;
+		//curl_multi_cleanup(multiHandle);
+		return output;
 	}
 	static int Writer(void* data, size_t size, size_t nmemb, void* buffer)
 	{
 		((std::string*)buffer)->append((char*)data, size * nmemb);
 		return size * nmemb;
 	}
+	static void OnError()
+	{
+		throw ConnectionFailureException();
+	}
 	Location GetUserLocation()
 	{
-		std::string result = GetWebsiteContent(IPinfoURL);
+		std::string result = GetWebsiteContent(IPinfoURL, OnError);
 		nlohmann::json resultParsed = nlohmann::json::parse(result);
 		std::string loc = resultParsed["loc"];
 		return { std::string(loc, 0, 7), std::string(loc, 8, 7) };
@@ -78,7 +91,7 @@ public:
 		std::vector<WeatherData> result(resultParsed["daily"].size());
 		int i = 0;
 		for (auto& element : resultParsed["daily"])
-		{		
+		{
 			result[i] = { std::to_string((float)element["temp"]["day"] - 273), std::to_string((float)element["pressure"]) };
 			result[i].temperature = std::to_string((int)round(std::stod(result[i].temperature)));
 			result[i].pressure = std::to_string((int)round(std::stod(result[i].pressure)));
