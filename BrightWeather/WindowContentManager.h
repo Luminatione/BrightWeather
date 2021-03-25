@@ -5,10 +5,6 @@
 #include <vector>
 #include <thread>
 
-
-#include "BrightWeatherExceptions.h"
-#include "WeekDaysUtility.h"
-#include "Utility.h"
 #include "WeatherInfoGetter.h"
 
 #define BUTTON_PARAM_START 1000
@@ -44,18 +40,9 @@ class WindowContentManager
 
 		Caption() = default;
 
-		Caption(HWND parent, std::string& caption, int x, int y, int width, int height, std::string defaultStr = "", int fontSize = 18) : x(x), y(y), height(height), width(width), defaultStr(defaultStr)
-		{
-			handle = CreateWindow(L"STATIC", Utility::AsciiStringToWstring(caption).c_str(), WS_CHILD | WS_VISIBLE, x, y, width, height, parent, nullptr, nullptr, nullptr);
-			HFONT font = CreateFontA(fontSize, 0, 0, 0, 0, 0, 0, 0, 0, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
-			SendMessageA(handle, WM_SETFONT, (WPARAM)font, TRUE);
-		}
+		Caption(HWND parent, std::string& caption, int x, int y, int width, int height, std::string defaultStr = "", int fontSize = 18);
 
-		void ChangeText(std::string& newText, bool onlyUpdate = false)
-		{
-			std::string temp = (onlyUpdate ? defaultStr : "") + newText;
-			SetWindowTextW(handle, Utility::AsciiStringToWstring(temp).c_str());
-		}
+		void ChangeText(std::string& newText, bool onlyUpdate = false);
 	};
 
 	HWND refreshButton;
@@ -65,136 +52,21 @@ class WindowContentManager
 	Caption pressureCaption;
 
 public:
-	WindowContentManager& operator=(const WindowContentManager& a)
-	{
-		this->daySelectionControls = a.daySelectionControls;
-		this->mainWindow = a.mainWindow;
-		return *this;
-	}
+	WindowContentManager& operator=(const WindowContentManager& a);
 
-	WindowContentManager(HWND mainWindowHandle) : mainWindow(mainWindowHandle) {	}
+	WindowContentManager(HWND mainWindowHandle);
 
-	WindowContentManager() = default;
+	WindowContentManager();
 
-	void CreateDaySelectionControls()
-	{
-		if (!mainWindow)
-		{
-			throw ClassNotInitializedException();
-		}
-		weekDays = WeekDaysUtility::GetNext7DaysWeekNames();
-		for (int i = 0; i < daySelectionSize; i++)
-		{
-			daySelectionControls[i] = CreateWindow(L"BUTTON", Utility::AsciiStringToWstring(weekDays[i]).c_str(),
-				WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, weekDayControlsMarginLeft + (weekDayControlsXOffset + weekDayControlsWidth) * i,
-				weekDayControlsMarginTop, weekDayControlsWidth, weekDayControlsHeight, mainWindow, (HMENU)(BUTTON_PARAM_START + i),
-				(HINSTANCE)GetWindowLongPtr(mainWindow, GWLP_HINSTANCE), NULL);
-		}
-	}
+	void CreateDaySelectionControls();
 
-	void CreateInformationDisplayControls()
-	{
-		std::string caption = Utility::AddColonAndSpaceAtEnd(weekDays[0]);
-		currentWeekDayCaption = Caption(mainWindow, caption, 60, 60, 120, 30, caption, 25);
-		caption = "temperature: ";
-		temperatureCaption = Caption(mainWindow, caption, 70, 100, 230, 20, caption);
-		caption = "pressure: ";
-		pressureCaption = Caption(mainWindow, caption, 70, 125, 230, 20, caption);
-		refreshButton = CreateWindow(L"BUTTON", L"Refresh",
-			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10,
-			220, 70, 25, mainWindow, (HMENU)REFRESH_BUTTON,
-			(HINSTANCE)GetWindowLongPtr(mainWindow, GWLP_HINSTANCE), NULL);
-	}
-	void LoadWeatherData()
-	{
-		try
-		{
-			std::thread thread = std::thread([&]() {
-				try
-				{
-					WeatherInfoGetter weatherInfoGetter;
-					std::vector<WeatherInfoGetter::WeatherData> temp = weatherInfoGetter.GetWeatherData();
-					SendMessageA(mainWindow, WM_COMMAND, WEATHER_DATA_LOADED, (LPARAM)&temp);
-				}
-				catch (ConnectionFailureException e)
-				{
-					std::string what = e.what();
-					SendMessageA(mainWindow, WM_COMMAND, WEATHER_DATA_LOADING_FAILED, (LPARAM)&what);
-				}
-				});
-			thread.detach();
-		}
-		catch (ConnectionFailureException e)
-		{
-			MessageBoxA(mainWindow, e.what(), "Error", MB_OK | MB_ICONERROR);
-		}
-	}
+	void CreateInformationDisplayControls();
 
-	void DisplayCurrentStoredData()
-	{
-		std::string temperature = weatherData[currentSelectedDay].temperature + "C";
-		std::string pressure = weatherData[currentSelectedDay].pressure + "hPa";
-		temperatureCaption.ChangeText(temperature, true);
-		pressureCaption.ChangeText(pressure, true);
-	}
+	void LoadWeatherData();
 
-	bool IsValidButtonID(WPARAM wParam)
-	{
-		return wParam >= BUTTON_PARAM_START && wParam < BUTTON_PARAM_START + daySelectionSize && weatherData.size() > wParam - BUTTON_PARAM_START;
-	}
+	void DisplayCurrentStoredData();
 
-	LRESULT CALLBACK ProcessEvents(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-	{
-		if (message != WM_COMMAND)
-		{
-			throw InvalidArgumentException();
-		}
+	bool IsValidButtonID(WPARAM wParam);
 
-		if (IsValidButtonID(wParam))
-		{
-			std::string	temp = Utility::AddColonAndSpaceAtEnd(weekDays[wParam - BUTTON_PARAM_START]);
-			currentWeekDayCaption.ChangeText(temp);
-			currentSelectedDay = wParam - BUTTON_PARAM_START;
-			DisplayCurrentStoredData();
-		}
-		else
-		{
-			switch (wParam)
-			{
-			case REFRESH_BUTTON:
-			{
-				LoadWeatherData();
-			}
-			break;
-			case WEATHER_DATA_LOADED:
-			{
-				weatherData = *(std::vector<WeatherInfoGetter::WeatherData>*)lParam;
-				DisplayCurrentStoredData();
-			}
-			break;
-			case WEATHER_DATA_LOADING_FAILED:
-			{
-				int option = MessageBoxA(mainWindow, (*(std::string*)lParam).c_str(), "Error", MB_RETRYCANCEL | MB_ICONERROR | MB_DEFBUTTON1 | MB_APPLMODAL);
-				switch (option)
-				{
-				case IDCANCEL:
-					SendMessageA(mainWindow, WM_COMMAND, IDM_EXIT, NULL);
-					break;
-				case IDRETRY:
-					SendMessageA(mainWindow, WM_COMMAND, REFRESH_BUTTON, NULL);
-					break;
-				default:
-					throw InvalidArgumentException();
-				}
-			}
-			break;
-			default:
-			{
-				return DefWindowProc(hWnd, message, wParam, lParam);
-			}
-			}
-		}
-
-		return 0;
-	}
+	LRESULT CALLBACK ProcessEvents(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

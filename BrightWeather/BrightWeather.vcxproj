@@ -161,6 +161,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BrightWeather.cpp" />
+    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="WeatherInfoGetter.cpp" />
+    <ClCompile Include="WeekDaysNames.cpp" />
+    <ClCompile Include="WeekDaysUtility.cpp" />
+    <ClCompile Include="WindowContentManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BrightWeather.rc" />
