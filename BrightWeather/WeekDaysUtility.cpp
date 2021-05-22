@@ -10,5 +10,5 @@ std::vector<std::string> WeekDaysUtility::GetNext7DaysWeekNames()
 	{
 		throw std::exception("localtime_s call failure");
 	}
-	return WeekDaysNames::GetDaysFromTo(0, 6);
+	return WeekDaysNames::GetDaysFromTo(nowOut->tm_wday, nowOut->tm_wday+6);
 }

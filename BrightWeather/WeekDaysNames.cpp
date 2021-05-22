@@ -1,6 +1,6 @@
 #include "WeekDaysNames.h"
 
-std::string WeekDaysNames::weekDays[7]{ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+std::string WeekDaysNames::weekDays[7]{ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 
 std::vector<std::string> WeekDaysNames::GetDaysFromTo(int start, int end)
 {
