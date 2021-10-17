@@ -55,6 +55,7 @@ WeatherInfoGetter::Location WeatherInfoGetter::GetUserLocation()
 	std::string result = GetWebsiteContent(IPinfoURL, OnError);
 	nlohmann::json resultParsed = nlohmann::json::parse(result);
 	std::string loc = resultParsed["loc"];
+
 	return {std::string(loc, 0, 7), std::string(loc, 8, 7)};
 }
 
